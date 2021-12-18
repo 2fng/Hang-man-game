@@ -14,6 +14,10 @@ class ViewController: UIViewController {
     var numberOfLetters: UILabel!
     var vowelsButtons = [UIButton]()
     var consonantsButtons = [UIButton]()
+    var activatedButtons = [UIButton]()
+    
+    var answer = ""
+    var questions = [String]()
     
     override func loadView() {
         view = UIView()
@@ -149,6 +153,48 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        loadAnimalsTxt()
+        startGame()
+    }
+    
+    func loadAnimalsTxt() {
+        
+        if let animalTxtFileURL = Bundle.main.url(forResource: "animals", withExtension: "txt") {
+            if let animalTxtContent = try? String(contentsOf: animalTxtFileURL) {
+                questions = animalTxtContent.components(separatedBy: "\n")
+                questions.shuffle()
+            }
+        } else {
+            print("Error loading word")
+        }
+    }
+    
+    func startGame() {
+        answer = questions.randomElement() ?? "404 No Word Found"
+        var questionForm = ""
+        var numberOfCharacter = 0
+        
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            for letter in self!.answer {
+                var strLetter = String(letter)
+                
+                if letter != " " {
+                    strLetter = "?"
+                    questionForm.append(contentsOf: strLetter)
+                    numberOfCharacter += 1
+                } else {
+                    questionForm.append(contentsOf: strLetter)
+                }
+            }
+        }
+        
+        print("Answer: \(answer)")
+        print("Question Form: \(questionForm)")
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.answersLabel.text = questionForm
+            self?.numberOfLetters.text = "\(numberOfCharacter) letters"
+        }
     }
 
 
