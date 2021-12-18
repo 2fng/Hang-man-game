@@ -311,7 +311,7 @@ class ViewController: UIViewController {
             present(ac, animated: true, completion: nil)
         }
         
-        if self.hp > 0 && !questionForm.contains("?") {
+        if !questionForm.contains("?") {
             self.score += 1
             let ac = UIAlertController(title: "You win!", message: nil, preferredStyle: .alert)
             //ac.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
