@@ -17,9 +17,26 @@ class ViewController: UIViewController {
     var activatedButtons = [UIButton]()
     
     var answer = ""
+    var questionForm = ""
+    
+    var hp = 7 {
+        didSet {
+            DispatchQueue.main.async { [weak self] in
+                self?.hpLabel.text = "HP: \(String(describing: self!.hp)) 🖤"
+            }
+        }
+    }
+    
+    var score = 0 {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
+    
     var questions = [String]()
     var vowels = [String]()
     var consonants = [String]()
+    var activatedButton = [String]()
     
     override func loadView() {
         view = UIView()
@@ -30,7 +47,7 @@ class ViewController: UIViewController {
         hpLabel = UILabel()
         hpLabel.translatesAutoresizingMaskIntoConstraints = false
         hpLabel.textAlignment = .right
-        hpLabel.text = "HP: 7 🖤"
+        hpLabel.text = "HP: \(hp) 🖤"
         view.addSubview(hpLabel)
         
         //scoreLabel
@@ -129,6 +146,8 @@ class ViewController: UIViewController {
             letterButton.frame = frame
             vowelButtonView.addSubview(letterButton)
             vowelCount += 1
+            
+            letterButton.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
         }
         vowelCount = 0
         
@@ -150,6 +169,8 @@ class ViewController: UIViewController {
                     letterButton.frame = frame
                     consonantButtonView.addSubview(letterButton)
                     consonantCount += 1
+                    
+                    letterButton.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
                     
                 } else {
                     count = 0
@@ -180,10 +201,16 @@ class ViewController: UIViewController {
         }
     }
     
-    func startGame() {
+    func startGame(_ action: UIAlertAction! = nil) {
+        
+        for button in activatedButtons {
+            button.isHidden = false
+        }
+        
+        questionForm = ""
         answer = questions.randomElement()?.uppercased() ?? "404 No Word Found"
-        var questionForm = ""
         var numberOfCharacter = 0
+        hp = 7
         
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
             for letter in self!.answer {
@@ -191,10 +218,10 @@ class ViewController: UIViewController {
                 
                 if letter != " " {
                     strLetter = "?"
-                    questionForm.append(contentsOf: strLetter)
+                    self?.questionForm.append(contentsOf: strLetter)
                     numberOfCharacter += 1
                 } else {
-                    questionForm.append(contentsOf: strLetter)
+                    self?.questionForm.append(contentsOf: strLetter)
                 }
             }
         }
@@ -203,7 +230,7 @@ class ViewController: UIViewController {
         print("Question Form: \(questionForm)")
         
         DispatchQueue.main.async { [weak self] in
-            self?.answersLabel.text = questionForm.uppercased()
+            self?.answersLabel.text = self?.questionForm.uppercased()
             self?.numberOfLetters.text = "\(numberOfCharacter) letters"
         }
     }
@@ -229,6 +256,68 @@ class ViewController: UIViewController {
         
         print("Vowels: \(vowels)")
         print("Consonants: \(consonants)")
+    }
+    
+    @objc func letterTapped(_ sender: UIButton) {
+        guard let buttonTitle = sender.titleLabel?.text else { return }
+        activatedButtons.append(sender)
+        
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            var wrongAnswer = true
+            for (index, letter) in self!.answer.enumerated() {
+                let charButtonTitle = Character(buttonTitle)
+                
+                if letter == charButtonTitle {
+                    
+                    self?.hp = self!.hp
+                    self!.questionForm = self!.replaceString(inputString: self!.questionForm, index: index, newChar: letter)
+                    self?.activatedButton.append(buttonTitle)
+                    wrongAnswer = false
+                } else {
+                    
+                    self?.activatedButton.append(buttonTitle)
+                }
+            }
+            if wrongAnswer == true {
+                self?.hp = self!.hp - 1
+            }
+        }
+        
+        sender.isHidden = true
+        print("After button \(buttonTitle) was tapped!")
+        print("Answer: \(answer)")
+        print("Question Form: \(questionForm)")
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.answersLabel.text = self?.questionForm.uppercased()
+        }
+        
+        endGameCondition()
+    }
+    
+    func replaceString(inputString: String, index: Int, newChar: Character) -> String {
+        var chars = Array(inputString)
+        chars[index] = newChar
+        let modifiedString = String(chars)
+        return modifiedString
+    }
+    
+    func endGameCondition() {
+        
+        if self.hp <= 0 {
+            let ac = UIAlertController(title: "You lose!", message: "The correct answer is: \(answer)", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "New game", style: .default, handler: startGame))
+            //ac.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            present(ac, animated: true, completion: nil)
+        }
+        
+        if self.hp > 0 && !questionForm.contains("?") {
+            self.score += 1
+            let ac = UIAlertController(title: "You win!", message: nil, preferredStyle: .alert)
+            //ac.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            ac.addAction(UIAlertAction(title: "New game", style: .default, handler: startGame))
+            present(ac, animated: true, completion: nil)
+        }
     }
 
 }
