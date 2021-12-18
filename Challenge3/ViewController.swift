@@ -18,16 +18,19 @@ class ViewController: UIViewController {
     
     var answer = ""
     var questions = [String]()
+    var vowels = [String]()
+    var consonants = [String]()
     
     override func loadView() {
         view = UIView()
         view.backgroundColor = .white
+        generateAlphabetArray()
         
         //hpLabel
         hpLabel = UILabel()
         hpLabel.translatesAutoresizingMaskIntoConstraints = false
         hpLabel.textAlignment = .right
-        hpLabel.text = "HP: 0"
+        hpLabel.text = "HP: 7 🖤"
         view.addSubview(hpLabel)
         
         //scoreLabel
@@ -112,21 +115,25 @@ class ViewController: UIViewController {
         var count = 0
         
         //Create button in vowelButtonView
+        var vowelCount = 0
         for col in 0..<5 {
             //Create button
             let letterButton = UIButton(type: .system)
             letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 24)
             
             //Temporary text
-            letterButton.setTitle("A", for: .normal)
+            letterButton.setTitle("\(vowels[vowelCount])", for: .normal)
             
             //Calculate the frame
             let frame = CGRect(x: col * width, y: 0, width: width, height: height)
             letterButton.frame = frame
             vowelButtonView.addSubview(letterButton)
-            
+            vowelCount += 1
         }
+        vowelCount = 0
+        
         //Create button in consonantButtonView
+        var consonantCount = 0
         for row in 0..<5 {
             for col in 0..<5 {
                 if count <= numberOfConsonant {
@@ -136,23 +143,27 @@ class ViewController: UIViewController {
                     letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 24)
                     
                     //Temporary text
-                    letterButton.setTitle("A", for: .normal)
+                    letterButton.setTitle("\(consonants[consonantCount])", for: .normal)
                     
                     //Calculate the frame
                     let frame = CGRect(x: col * width, y: row * height, width: width, height: height)
                     letterButton.frame = frame
                     consonantButtonView.addSubview(letterButton)
+                    consonantCount += 1
+                    
                 } else {
                     count = 0
                     return
                 }
             }
         }
+        consonantCount = 0
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
         loadAnimalsTxt()
         startGame()
     }
@@ -170,7 +181,7 @@ class ViewController: UIViewController {
     }
     
     func startGame() {
-        answer = questions.randomElement() ?? "404 No Word Found"
+        answer = questions.randomElement()?.uppercased() ?? "404 No Word Found"
         var questionForm = ""
         var numberOfCharacter = 0
         
@@ -192,11 +203,33 @@ class ViewController: UIViewController {
         print("Question Form: \(questionForm)")
         
         DispatchQueue.main.async { [weak self] in
-            self?.answersLabel.text = questionForm
+            self?.answersLabel.text = questionForm.uppercased()
             self?.numberOfLetters.text = "\(numberOfCharacter) letters"
         }
     }
 
+    func generateAlphabetArray() {
+        let aScalars = "a".unicodeScalars
+        let aCode = aScalars[aScalars.startIndex].value
+        
+        let letters: [Character] = (0..<26).map {
+            i in Character(UnicodeScalar(aCode + i)!)
+        }
+        
+        print(letters)
+        
+        for letter in letters {
+            let strLetter = String(letter)
+            if letter == "a" || letter == "e" || letter == "i" || letter == "o" || letter == "u" {
+                vowels.append(strLetter.uppercased())
+            } else {
+                consonants.append(strLetter.uppercased())
+            }
+        }
+        
+        print("Vowels: \(vowels)")
+        print("Consonants: \(consonants)")
+    }
 
 }
 
